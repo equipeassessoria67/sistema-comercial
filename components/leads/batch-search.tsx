@@ -152,6 +152,10 @@ export function BatchSearch() {
       const cnpjDigit = cnpjs[i];
       try {
         const data = await fetchCnpj(cnpjDigit);
+        if (!passesFilters(data, filters)) {
+          prog.filtered++;
+          continue;
+        }
         const breakdown = calculateScoreBreakdown(data);
         const score = calculateScore(data);
         setResults((prev) => [
