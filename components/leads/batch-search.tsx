@@ -69,7 +69,6 @@ interface Filters {
 }
 
 function passesFilters(data: BrasilApiCnpjResponse, f: Filters): boolean {
-  if (data.situacao_cadastral !== "ATIVA") return false;
   if (f.uf && data.uf !== f.uf) return false;
   if (f.municipio && !data.municipio?.toLowerCase().includes(f.municipio.toLowerCase())) return false;
   if (f.cnae) {

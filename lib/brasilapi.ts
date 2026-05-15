@@ -76,10 +76,10 @@ export function calculateScore(data: BrasilApiCnpjResponse): number {
 
 export async function fetchCnpj(cnpj: string): Promise<BrasilApiCnpjResponse> {
   const digits = cnpj.replace(/\D/g, "");
-  const res = await fetch(`/api/cnpj/${digits}`, { cache: "no-store" });
+  const res = await fetch(`/api/brasilapi/cnpj/v1/${digits}`, { cache: "no-store" });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? "Erro ao consultar o CNPJ. Tente novamente.");
+    throw new Error(body.message ?? body.error ?? "Erro ao consultar o CNPJ. Tente novamente.");
   }
   return res.json();
 }
