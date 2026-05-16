@@ -11,6 +11,7 @@ type ScoreCriterio = {
   nome: string;
   descricao: string;
   pontuacao: number;
+  peso: number;
   ativo: boolean;
   ordem: number;
   criado_em: string;
@@ -21,24 +22,25 @@ type Editavel = {
   nome: string;
   descricao: string;
   pontuacao: number;
+  peso: number;
   ativo: boolean;
   ordem: number;
 };
 
 const PADROES: Omit<Editavel, "id">[] = [
-  { nome: "Tem e-mail cadastrado",      descricao: "Lead possui endereço de e-mail registrado",       pontuacao: 20, ativo: true, ordem: 1 },
-  { nome: "Tem telefone cadastrado",    descricao: "Lead possui número de telefone registrado",        pontuacao: 15, ativo: true, ordem: 2 },
-  { nome: "Porte ME ou EPP",            descricao: "Empresa enquadrada como ME ou EPP",                pontuacao: 20, ativo: true, ordem: 3 },
-  { nome: "Empresa de 2 a 10 anos",     descricao: "Empresa com tempo de abertura entre 2 e 10 anos", pontuacao: 20, ativo: true, ordem: 4 },
-  { nome: "Empresa com mais de 10 anos",descricao: "Empresa com mais de 10 anos de atividade",         pontuacao: 10, ativo: true, ordem: 5 },
-  { nome: "Tem nome fantasia",          descricao: "Empresa possui nome fantasia cadastrado",          pontuacao: 10, ativo: true, ordem: 6 },
-  { nome: "Tem sócios cadastrados",     descricao: "Empresa possui quadro societário registrado",      pontuacao: 15, ativo: true, ordem: 7 },
+  { nome: "Tem e-mail cadastrado",      descricao: "Lead possui endereço de e-mail registrado",       pontuacao: 20, peso: 1, ativo: true, ordem: 1 },
+  { nome: "Tem telefone cadastrado",    descricao: "Lead possui número de telefone registrado",        pontuacao: 15, peso: 1, ativo: true, ordem: 2 },
+  { nome: "Porte ME ou EPP",            descricao: "Empresa enquadrada como ME ou EPP",                pontuacao: 20, peso: 1, ativo: true, ordem: 3 },
+  { nome: "Empresa de 2 a 10 anos",     descricao: "Empresa com tempo de abertura entre 2 e 10 anos", pontuacao: 20, peso: 1, ativo: true, ordem: 4 },
+  { nome: "Empresa com mais de 10 anos",descricao: "Empresa com mais de 10 anos de atividade",         pontuacao: 10, peso: 1, ativo: true, ordem: 5 },
+  { nome: "Tem nome fantasia",          descricao: "Empresa possui nome fantasia cadastrado",          pontuacao: 10, peso: 1, ativo: true, ordem: 6 },
+  { nome: "Tem sócios cadastrados",     descricao: "Empresa possui quadro societário registrado",      pontuacao: 15, peso: 1, ativo: true, ordem: 7 },
 ];
 
 export function ScoreCriterios({ initialCriterios }: { initialCriterios: ScoreCriterio[] }) {
   const [criterios, setCriterios] = useState<Editavel[]>(
-    initialCriterios.map(({ id, nome, descricao, pontuacao, ativo, ordem }) => ({
-      id, nome, descricao, pontuacao, ativo, ordem,
+    initialCriterios.map(({ id, nome, descricao, pontuacao, peso, ativo, ordem }) => ({
+      id, nome, descricao, pontuacao, peso: peso ?? 1, ativo, ordem,
     }))
   );
   const [saving, setSaving] = useState(false);
@@ -47,7 +49,7 @@ export function ScoreCriterios({ initialCriterios }: { initialCriterios: ScoreCr
 
   const totalAtivos = criterios
     .filter((c) => c.ativo)
-    .reduce((acc, c) => acc + c.pontuacao, 0);
+    .reduce((acc, c) => acc + c.pontuacao * c.peso, 0);
 
   function update(id: string, field: keyof Editavel, value: string | number | boolean) {
     setCriterios((prev) =>
@@ -111,7 +113,7 @@ export function ScoreCriterios({ initialCriterios }: { initialCriterios: ScoreCr
           )}
         >
           <span>Total possível:</span>
-          <span className="font-bold">{totalAtivos} pts</span>
+          <span className="font-bold">{Math.round(totalAtivos)} pts</span>
           {totalAtivos > 100 && <span className="text-xs">⚠</span>}
         </div>
       </div>
@@ -120,7 +122,7 @@ export function ScoreCriterios({ initialCriterios }: { initialCriterios: ScoreCr
       {totalAtivos > 100 && (
         <div className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
           <strong>Atenção:</strong> A soma dos critérios ativos é{" "}
-          <strong>{totalAtivos} pontos</strong>. Leads podem ultrapassar o score máximo de
+          <strong>{Math.round(totalAtivos)} pontos</strong>. Leads podem ultrapassar o score máximo de
           100 — considere ajustar as pontuações.
         </div>
       )}
@@ -181,6 +183,40 @@ export function ScoreCriterios({ initialCriterios }: { initialCriterios: ScoreCr
                     <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">
                       pts
                     </span>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Peso</label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      min={0.1}
+                      max={5}
+                      step={0.1}
+                      value={c.peso}
+                      onChange={(e) =>
+                        update(
+                          c.id,
+                          "peso",
+                          Math.min(5, Math.max(0.1, Number(e.target.value)))
+                        )
+                      }
+                      className="h-8 w-[64px] text-right text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-slate-500">Efetivo</label>
+                  <div className={cn(
+                    "flex h-8 w-[64px] items-center justify-end rounded-md border px-2 text-sm font-medium",
+                    c.peso !== 1
+                      ? "border-blue-200 bg-blue-50 text-blue-700"
+                      : "border-slate-200 bg-slate-50 text-slate-500"
+                  )}>
+                    {Math.round(c.pontuacao * c.peso)}
+                    <span className="ml-0.5 text-xs font-normal opacity-70">p</span>
                   </div>
                 </div>
 
