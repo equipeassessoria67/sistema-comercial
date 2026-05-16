@@ -70,9 +70,11 @@ export function ScoreCriterios({ initialCriterios }: { initialCriterios: ScoreCr
       .from("score_criterios")
       .upsert(criterios, { onConflict: "id" });
     setSaving(false);
-    error
-      ? exibirFeedback("erro", "Erro ao salvar. Tente novamente.")
-      : exibirFeedback("sucesso", "Alterações salvas com sucesso!");
+    if (error) {
+      exibirFeedback("erro", "Erro ao salvar. Tente novamente.");
+    } else {
+      exibirFeedback("sucesso", "Alterações salvas com sucesso!");
+    }
   }
 
   async function handleRestaurar() {
@@ -88,9 +90,11 @@ export function ScoreCriterios({ initialCriterios }: { initialCriterios: ScoreCr
       .from("score_criterios")
       .upsert(restaurados, { onConflict: "id" });
     setRestoring(false);
-    error
-      ? exibirFeedback("erro", "Erro ao restaurar padrões.")
-      : exibirFeedback("sucesso", "Padrões restaurados com sucesso!");
+    if (error) {
+      exibirFeedback("erro", "Erro ao restaurar padrões.");
+    } else {
+      exibirFeedback("sucesso", "Padrões restaurados com sucesso!");
+    }
   }
 
   return (
