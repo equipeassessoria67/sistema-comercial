@@ -59,6 +59,66 @@ export async function addLead(
   return { message: `Lead "${data.razao_social}" adicionado com sucesso!` };
 }
 
+export interface LeadRow {
+  id: string;
+  cnpj: string;
+  razao_social: string;
+  nome_fantasia: string | null;
+  situacao: string;
+  data_abertura: string | null;
+  cnae_codigo: string;
+  cnae_descricao: string;
+  porte: string;
+  municipio: string;
+  uf: string;
+  telefone: string | null;
+  email: string | null;
+  score: number;
+  etapa_kanban: string;
+  ultimo_contato: string | null;
+  proximo_passo: string | null;
+}
+
+export async function getLeads(): Promise<{ data?: LeadRow[]; error?: string }> {
+  const supabase = await createClient();
+
+  const [{ data: leads, error }, { data: interacoes }] = await Promise.all([
+    supabase
+      .from("leads")
+      .select(
+        "id, cnpj, razao_social, nome_fantasia, situacao, data_abertura, cnae_codigo, cnae_descricao, porte, municipio, uf, telefone, email, score, etapa_kanban"
+      )
+      .order("razao_social", { ascending: true }),
+    supabase
+      .from("interacoes")
+      .select("lead_id, criado_em, proximo_passo")
+      .order("criado_em", { ascending: false }),
+  ]);
+
+  if (error) {
+    console.error("[getLeads] Supabase error:", JSON.stringify(error));
+    return { error: `${error.code}: ${error.message}` };
+  }
+
+  const latestMap = new Map<string, { criado_em: string; proximo_passo: string | null }>();
+  for (const ic of interacoes ?? []) {
+    if (!latestMap.has(ic.lead_id)) {
+      latestMap.set(ic.lead_id, { criado_em: ic.criado_em, proximo_passo: ic.proximo_passo ?? null });
+    }
+  }
+
+  const enriched: LeadRow[] = (leads ?? []).map((l) => {
+    const latest = latestMap.get(l.id);
+    return {
+      ...(l as Omit<LeadRow, "ultimo_contato" | "proximo_passo">),
+      ultimo_contato: latest?.criado_em ?? null,
+      proximo_passo: latest?.proximo_passo ?? null,
+    };
+  });
+
+  return { data: enriched };
+}
+
 export async function getExistingCnpjs(cnpjs: string[]): Promise<string[]> {
   if (cnpjs.length === 0) return [];
   const supabase = await createClient();

@@ -4,12 +4,14 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { CnpjSearch } from "@/components/leads/cnpj-search";
 import { BatchSearch } from "@/components/leads/batch-search";
+import { AllLeads } from "@/components/leads/all-leads";
 
-type Tab = "cnpj" | "lote";
+type Tab = "cnpj" | "lote" | "todos";
 
 const tabs: { id: Tab; label: string }[] = [
   { id: "cnpj", label: "Busca por CNPJ" },
   { id: "lote", label: "Busca em Lote" },
+  { id: "todos", label: "Todos os Leads" },
 ];
 
 export default function LeadsPage() {
@@ -40,7 +42,9 @@ export default function LeadsPage() {
       </div>
 
       {/* Tab content */}
-      {activeTab === "cnpj" ? <CnpjSearch /> : <BatchSearch />}
+      {activeTab === "cnpj" && <CnpjSearch />}
+      {activeTab === "lote" && <BatchSearch />}
+      {activeTab === "todos" && <AllLeads />}
     </div>
   );
 }
